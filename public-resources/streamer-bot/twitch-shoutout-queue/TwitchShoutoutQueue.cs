@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-using Microsoft.Toolkit.Uwp.Notifications;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -19,12 +18,12 @@ public class CPHInline
     public ShoutoutQueue shoutoutQueue = new ShoutoutQueue();
     public TimeSpan shoutoutCooldown = TimeSpan.FromMinutes(60);
     private bool processingQueue = false;
-    Version extensionVersion = new Version(1, 1, 3);
-
+    Version extensionVersion = new Version(1, 1, 4);
     public void Init()
     {
         CPH.RegisterCustomTrigger("Queued Shoutout Sent", "luponium_queuedShoutout", ["Luponium", "Twitch Shoutout Queue"]);
-        if (!CPH.GroupExists("Walkon Shoutouts")) CPH.AddGroup("Walkon Shoutouts");
+        if (!CPH.GroupExists("Walkon Shoutouts"))
+            CPH.AddGroup("Walkon Shoutouts");
     }
 
     public bool EnqueueRaid()
@@ -98,9 +97,10 @@ public class CPHInline
         {
             while (shoutoutQueue.Count > 0)
             {
+                var nextItem = shoutoutQueue.Peek();
                 string userId = shoutoutQueue.Dequeue().UserId;
                 CPH.TwitchSendShoutoutById(userId);
-                CallCustomTrigger(userId);
+                CallCustomTrigger(userId, nextItem.Priority.ToString());
                 CPH.SetTwitchUserVarById(userId, "lastShoutout", DateTime.Now, false);
                 await Task.Delay(130000);
             }
@@ -111,7 +111,7 @@ public class CPHInline
         }
     }
 
-    private void CallCustomTrigger(string userId)
+    private void CallCustomTrigger(string userId, string priority)
     {
         var userInfo = GetInfoById(userId);
         var Data = new Dictionary<string, object>
@@ -121,26 +121,30 @@ public class CPHInline
                 "luponium_queuedShoutout"
             },
             {
-                "channelUrl",
-                $"https://www.twitch.tv/{userInfo.UserLogin}"},
-            {
                 "extensionVersion",
                 extensionVersion
             },
+            {
+                "channelUrl",
+                $"https://www.twitch.tv/{userInfo.UserLogin}"
+            },
+            {
+                "queuePriority",
+                priority
+            },
         };
-
         foreach (var prop in userInfo.GetType().GetProperties())
         {
             var key = char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
-            data[key] = prop.GetValue(userInfo);
+            Data[key] = prop.GetValue(userInfo);
         }
 
         CPH.TriggerCodeEvent("luponium_queuedShoutout", Data);
     }
+
     private bool ShouldSkipUser(string userId)
     {
         DateTime lastShoutout = CPH.GetTwitchUserVarById<DateTime>(userId, "lastShoutout", false);
-
         bool onCooldown = DateTime.Now - lastShoutout < shoutoutCooldown;
         if (onCooldown)
             return true;
@@ -198,6 +202,14 @@ public class ShoutoutQueue
         return null;
     }
 
+    public QueueItem Peek()
+    {
+        var first = _queues.Values.FirstOrDefault(q => q.Count > 0);
+        if (first == null)
+            return null;
+        return first[0];
+    }
+
     public bool RemoveUser(string userId)
     {
         return _queues.Values.Any(list =>
@@ -225,7 +237,7 @@ public class ShoutoutQueue
 
     public int? GetPosition(string userId)
     {
-        return FlattenWithPosition().Where(x => x.Item.UserId == userId).Select(x => (int?)x.Position).FirstOrDefault();
+        return FlattenWithPosition().Where(x => x.Item.UserId == userId).Select(x => (int? )x.Position).FirstOrDefault();
     }
 
     public List<string> GetFirstUserIds(int count)
