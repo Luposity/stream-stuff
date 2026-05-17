@@ -31,7 +31,7 @@ The setup is pretty much a drag and drop, you won't need to really change much b
 > - Twitch has a 1 hour cooldown between sending shoutouts per person.
 
 ## Command Setup
-The command included has a few extra modifications to it, if you don't want something to function like i've set it up, then just change it.
+The command included has a few extra modifications to it, if you don't want something to function like I've set it up, then just change it.
 
 - The command can be found in: `Commands -> Luponium | Shout-out Command`<br>
 - The command has Shared Chat trigger enabled as well as chat command trigger.<br>
@@ -119,7 +119,7 @@ U0JBRR+LCAAAAAAABADtXelz4kiW/74R+z8wNdGxH6bl1QloImYjDDaXbaoAI471xIaUmQIVOhgkcXim
 ------
 > [!NOTE]
 > ### AI Content Disclaimer<br>
-> AI tools were used in the production of this Extension. The use of AI tools were used for educational purposes only and does not reflect my final expertise and expereince.
+> AI tools were used in the production of this Extension. The use of AI tools were used for educational purposes only and does not reflect my final expertise and experience.
 > I am fully self taught with C# scripting and use online tools to assist myself with educating myself.
 > Sources I've used for teaching myself include:
 > - Microsoft Learn
